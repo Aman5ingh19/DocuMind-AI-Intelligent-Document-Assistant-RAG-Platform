@@ -2,11 +2,11 @@
 
 > A production-ready, full-stack AI document question-answering platform built with **Angular 19**, **ASP.NET Core 8**, **Python FastAPI**, **ChromaDB**, and **MySQL**.
 
-[![Angular](https://img.shields.io/badge/Frontend-Angular_19-dd0031?style=flat&logo=angular&logoColor=white)](frontend)
-[![.NET 8](https://img.shields.io/badge/Backend-ASP.NET_Core_8-512bd4?style=flat&logo=dotnet&logoColor=white)](backend)
-[![FastAPI](https://img.shields.io/badge/AI_Microservice-FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](ai_service)
-[![ChromaDB](https://img.shields.io/badge/Vector_Store-ChromaDB-fc521f?style=flat)](ai_service)
-[![Docker](https://img.shields.io/badge/Deployment-Docker_Compose-2496ed?style=flat&logo=docker&logoColor=white)](docker-compose.yml)
+[![Angular](https://img.shields.io/badge/Frontend-Angular%2019-dd0031?style=flat&logo=angular)](frontend)
+[![.NET 8](https://img.shields.io/badge/Backend-ASP.NET%20Core%208-512bd4?style=flat&logo=dotnet)](backend)
+[![FastAPI](https://img.shields.io/badge/AI%20Microservice-FastAPI-009688?style=flat&logo=fastapi)](ai_service)
+[![ChromaDB](https://img.shields.io/badge/Vector%20Store-ChromaDB-fc521f?style=flat)](ai_service)
+[![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ed?style=flat&logo=docker)](docker-compose.yml)
 
 ---
 
