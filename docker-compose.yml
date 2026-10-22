@@ -1,0 +1,124 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────────────────────────
+  # MySQL Database (use Aiven in production – this is for local dev only)
+  # ─────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: docassistant_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-dev_root_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-docassistant}
+      MYSQL_USER: ${MYSQL_USER:-docuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dev_db_pass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-dev_root_pass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - docassistant_net
+
+  # ─────────────────────────────────────────────────────────────
+  # Python FastAPI AI Service
+  # ─────────────────────────────────────────────────────────────
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: docassistant_ai
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-mock}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      CHROMA_PERSIST_DIR: /app/data/chroma_db
+      DOCUMENT_STORAGE_PATH: /app/data/documents
+      CHUNK_SIZE_TOKENS: ${CHUNK_SIZE_TOKENS:-500}
+      CHUNK_OVERLAP_TOKENS: ${CHUNK_OVERLAP_TOKENS:-100}
+    volumes:
+      - document_storage:/app/data/documents
+      - chroma_data:/app/data/chroma_db
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - docassistant_net
+
+  # ─────────────────────────────────────────────────────────────
+  # ASP.NET Core Web API Backend
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docassistant_backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=${MYSQL_DATABASE:-docassistant};User=${MYSQL_USER:-docuser};Password=${MYSQL_PASSWORD:-dev_db_pass};AllowPublicKeyRetrieval=true;SslMode=None;"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY}
+      JwtSettings__Issuer: ${JWT_ISSUER:-DocAssistant}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-DocAssistant}
+      JwtSettings__ExpiryMinutes: ${JWT_EXPIRY_MINUTES:-60}
+      AiService__BaseUrl: http://ai_service:8000
+      AiService__InternalApiKey: ${INTERNAL_API_KEY}
+      Storage__LocalPath: /app/documents
+      Storage__MaxFileSizeBytes: ${MAX_FILE_SIZE_BYTES:-26214400}
+    volumes:
+      - document_storage:/app/documents
+    ports:
+      - "5000:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ai_service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - docassistant_net
+
+  # ─────────────────────────────────────────────────────────────
+  # Angular Frontend (nginx serving production build)
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: docassistant_frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - docassistant_net
+
+volumes:
+  mysql_data:
+  document_storage:
+  chroma_data:
+
+networks:
+  docassistant_net:
+    driver: bridge

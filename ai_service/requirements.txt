@@ -1,0 +1,31 @@
+# Core framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# PDF Extraction
+PyMuPDF==1.24.10          # fitz – fast, reliable text extraction with page numbers
+
+# Vector Store
+chromadb==0.5.15
+
+# Embeddings – choose one (or use mock for dev)
+# Free / local option:
+# sentence-transformers==3.1.1
+
+# Paid / cloud options (install the one matching your LLM_PROVIDER):
+# openai==1.50.0
+# groq==0.10.0
+
+# LLM providers (optional – install as needed)
+# openai==1.50.0
+# groq==0.10.0
+
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.27.2            # async test client for FastAPI
+
+# Utilities
+python-multipart==0.0.9  # Required by FastAPI for file upload parsing

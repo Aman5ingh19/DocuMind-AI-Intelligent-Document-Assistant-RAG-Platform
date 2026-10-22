@@ -1,0 +1,520 @@
+<div class="app-layout">
+  <!-- Top Navigation Header -->
+  <header class="app-header glass-panel">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="brand-title">DocuMind<span class="ai-pill">AI</span></span>
+          <span class="brand-subtitle">Document Intelligence Platform</span>
+        </div>
+      </div>
+
+      <div class="engine-status">
+        <span class="status-dot"></span>
+        <span>RAG Engine Online</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="btn btn-secondary btn-sm" (click)="toggleTheme()" [title]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <svg *ngIf="isDarkMode()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg *ngIf="!isDarkMode()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
+      <div class="user-pill" *ngIf="authService.currentUser() as user">
+        <div class="user-avatar">
+          {{ user.email.substring(0, 1).toUpperCase() }}
+        </div>
+        <span class="user-email">{{ user.email }}</span>
+      </div>
+
+      <button class="btn btn-outline btn-sm logout-btn" (click)="logout()" title="Sign out">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace-container">
+    <!-- Left Sidebar: Documents & Chats -->
+    <aside class="sidebar glass-panel">
+      <!-- Tabs Header -->
+      <div class="sidebar-tabs">
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'docs'"
+          (click)="activeTab.set('docs')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span>Documents</span>
+          <span class="tab-count">{{ docService.documents().length }}</span>
+        </button>
+
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'chats'"
+          (click)="activeTab.set('chats')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Conversations</span>
+          <span class="tab-count">{{ chatService.sessions().length }}</span>
+        </button>
+      </div>
+
+      <!-- Tab Content: Documents -->
+      <div class="tab-content" *ngIf="activeTab() === 'docs'">
+        <!-- Upload Box -->
+        <div
+          class="upload-dropzone"
+          [class.dragging]="isDragging"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+          (click)="fileInput.click()"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept=".pdf,application/pdf"
+            (change)="onFileChange($event)"
+            style="display: none;"
+          />
+          <div class="upload-icon-wrapper">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="upload-text">
+            <strong>Drop PDF here or click to browse</strong>
+            <span>Up to 30MB • Text-based PDF</span>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="upload-progress-bar" *ngIf="uploadProgress() !== null">
+            <div class="progress-fill" [style.width.%]="uploadProgress()"></div>
+            <span class="progress-label">Uploading {{ uploadProgress() }}%</span>
+          </div>
+        </div>
+
+        <!-- Document List Controls -->
+        <div class="docs-header" *ngIf="docService.documents().length > 0">
+          <div class="select-all-wrapper" (click)="toggleSelectAll()">
+            <input
+              type="checkbox"
+              [checked]="allCompletedSelected()"
+              [disabled]="completedDocuments().length === 0"
+              (click)="$event.stopPropagation()"
+              (change)="toggleSelectAll()"
+            />
+            <span>Select all ready ({{ chatService.selectedDocumentIds().length }} active)</span>
+          </div>
+
+          <div class="search-input-wrapper">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Search documents..."
+              [(ngModel)]="documentSearchQuery"
+            />
+          </div>
+        </div>
+
+        <!-- Document List -->
+        <div class="document-list">
+          <div
+            *ngFor="let doc of filteredDocuments()"
+            class="document-item"
+            [class.selected]="chatService.selectedDocumentIds().includes(doc.id)"
+            [class.disabled]="doc.status !== 'Completed'"
+            (click)="doc.status === 'Completed' ? toggleDocument(doc.id) : null"
+          >
+            <div class="doc-checkbox">
+              <input
+                type="checkbox"
+                [checked]="chatService.selectedDocumentIds().includes(doc.id)"
+                [disabled]="doc.status !== 'Completed'"
+                (click)="$event.stopPropagation()"
+                (change)="toggleDocument(doc.id)"
+              />
+            </div>
+
+            <div class="doc-info">
+              <div class="doc-title" [title]="doc.fileName">
+                {{ doc.fileName }}
+              </div>
+              <div class="doc-meta">
+                <span>{{ formatFileSize(doc.fileSizeBytes) }}</span>
+                <span *ngIf="doc.totalPages > 0">• {{ doc.totalPages }} pages</span>
+                <span>• {{ formatDate(doc.uploadedAtUtc) }}</span>
+              </div>
+
+              <!-- Status Badge -->
+              <div class="doc-status-line">
+                <span
+                  class="badge"
+                  [ngClass]="'badge-' + doc.status.toLowerCase()"
+                >
+                  <svg *ngIf="doc.status === 'Completed'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="doc.status === 'Processing'" class="spinner" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/></svg>
+                  <span>{{ doc.status }}</span>
+                </span>
+
+                <button
+                  *ngIf="doc.status === 'Failed'"
+                  class="btn-retry-inline"
+                  (click)="$event.stopPropagation(); retryDocument(doc.id)"
+                  title="Retry processing"
+                >
+                  ↻ Retry
+                </button>
+              </div>
+
+              <div *ngIf="doc.errorMessage" class="doc-error-snippet" [title]="doc.errorMessage">
+                Error: {{ doc.errorMessage }}
+              </div>
+            </div>
+
+            <div class="doc-actions" (click)="$event.stopPropagation()">
+              <button
+                class="action-btn"
+                (click)="downloadDocument(doc.id, doc.fileName)"
+                title="Download original PDF"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+
+              <button
+                class="action-btn delete"
+                (click)="deleteDocument(doc, $event)"
+                title="Delete document"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-docs" *ngIf="docService.documents().length === 0">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <p>No documents uploaded yet.</p>
+            <span>Upload your college syllabus, book chapter, or research paper above to start!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Conversations -->
+      <div class="tab-content" *ngIf="activeTab() === 'chats'">
+        <button class="btn btn-primary btn-block new-chat-btn" (click)="createNewChat()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Start New Conversation</span>
+        </button>
+
+        <div class="session-list">
+          <div
+            *ngFor="let s of chatService.sessions()"
+            class="session-item"
+            [class.active]="chatService.activeSessionId() === s.id"
+            (click)="selectChat(s.id)"
+          >
+            <div class="session-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div class="session-details">
+              <div class="session-title" [title]="s.title">{{ s.title }}</div>
+              <div class="session-date">{{ formatDate(s.updatedAtUtc) }}</div>
+            </div>
+            <button
+              class="action-btn delete session-del-btn"
+              (click)="deleteChat(s.id, $event)"
+              title="Delete conversation"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="empty-docs" *ngIf="chatService.sessions().length === 0">
+            <p>No conversations yet.</p>
+            <span>Click above to start your first chat!</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Main Area: AI Chat & Citations -->
+    <section class="chat-workspace glass-panel">
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="chat-title-info">
+          <h2>Document Assistant</h2>
+          <div class="active-context-chips">
+            <span class="context-label">Query Context:</span>
+            <span class="context-badge" *ngIf="chatService.selectedDocumentIds().length > 0">
+              ⚡ {{ chatService.selectedDocumentIds().length }} Document(s) Active
+            </span>
+            <span class="context-badge empty" *ngIf="chatService.selectedDocumentIds().length === 0">
+              ⚠️ No documents selected
+            </span>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" (click)="createNewChat()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New Chat</span>
+        </button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="messages-container" id="chatMessagesContainer">
+        <!-- Starter Suggestions when no messages -->
+        <div class="starter-hero" *ngIf="chatService.messages().length === 0">
+          <div class="hero-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"></path>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+          </div>
+          <h3>What would you like to discover in your documents?</h3>
+          <p>DocuMind extracts answers directly from your uploaded PDFs and verifies each claim with exact page citations.</p>
+
+          <div class="starter-grid" *ngIf="chatService.selectedDocumentIds().length > 0">
+            <div class="starter-card" (click)="useStarterPrompt('Provide a comprehensive summary of the main points covered in these documents.')">
+              <div class="starter-icon">📋</div>
+              <div class="starter-text">
+                <strong>Executive Summary</strong>
+                <span>Provide a comprehensive overview of the core topics.</span>
+              </div>
+            </div>
+
+            <div class="starter-card" (click)="useStarterPrompt('What are the key requirements, guidelines, or deadlines outlined in this text?')">
+              <div class="starter-icon">🎯</div>
+              <div class="starter-text">
+                <strong>Requirements & Dates</strong>
+                <span>Find guidelines, syllabus units, or deadlines.</span>
+              </div>
+            </div>
+
+            <div class="starter-card" (click)="useStarterPrompt('List and explain the most important concepts or definitions mentioned.')">
+              <div class="starter-icon">💡</div>
+              <div class="starter-text">
+                <strong>Key Concepts</strong>
+                <span>Extract fundamental principles and terminology.</span>
+              </div>
+            </div>
+
+            <div class="starter-card" (click)="useStarterPrompt('What are the potential questions or exam topics likely to come from this content?')">
+              <div class="starter-icon">🎓</div>
+              <div class="starter-text">
+                <strong>Study Questions</strong>
+                <span>Generate practice questions to test understanding.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice-box" *ngIf="chatService.selectedDocumentIds().length === 0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Please upload a PDF and select it in the left panel to begin querying.</span>
+          </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div *ngFor="let msg of chatService.messages()" class="message-row" [class.user]="msg.role === 'User'" [class.assistant]="msg.role === 'Assistant'">
+          <div class="message-bubble" [class.loading]="msg.isLoading">
+            <!-- Role Avatar -->
+            <div class="bubble-header">
+              <span class="role-badge">
+                <span *ngIf="msg.role === 'User'">👤 You</span>
+                <span *ngIf="msg.role === 'Assistant'" class="assistant-tag">
+                  <span class="sparkle">✨</span> DocuMind Assistant
+                </span>
+              </span>
+              <span class="timestamp">{{ formatDate(msg.createdAtUtc) }}</span>
+            </div>
+
+            <!-- Loading Skeleton -->
+            <div *ngIf="msg.isLoading" class="skeleton-loader">
+              <div class="skeleton-line" style="width: 85%;"></div>
+              <div class="skeleton-line" style="width: 95%;"></div>
+              <div class="skeleton-line" style="width: 60%;"></div>
+              <div class="thinking-label">
+                <svg class="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="2" x2="12" y2="6"></line>
+                  <line x1="12" y1="18" x2="12" y2="22"></line>
+                </svg>
+                <span>Searching vector database and generating answer with citations...</span>
+              </div>
+            </div>
+
+            <!-- Text Content -->
+            <div
+              *ngIf="!msg.isLoading"
+              class="message-text markdown-body"
+              [innerHTML]="renderMarkdown(msg.content)"
+            ></div>
+
+            <!-- Grounded Citations Cards -->
+            <div *ngIf="msg.citations && msg.citations.length > 0" class="citations-container">
+              <div class="citations-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span>Supporting Document Passages ({{ msg.citations.length }} sources)</span>
+              </div>
+
+              <div class="citation-cards-grid">
+                <div
+                  *ngFor="let cit of msg.citations"
+                  class="citation-card"
+                  (click)="openCitationModal(cit)"
+                  title="Click to view full passage"
+                >
+                  <div class="cit-top">
+                    <span class="cit-page">Page {{ cit.pageNumber }}</span>
+                    <span class="cit-doc" [title]="cit.documentName || 'Document'">
+                      {{ cit.documentName || 'Document' }}
+                    </span>
+                    <span class="cit-score">
+                      {{ (cit.relevanceScore * 100).toFixed(0) }}% match
+                    </span>
+                  </div>
+                  <div class="cit-snippet">
+                    "{{ cit.snippet }}"
+                  </div>
+                  <div class="cit-hint">Click to expand excerpt ↗</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-input-bar">
+        <div class="no-docs-alert" *ngIf="chatService.selectedDocumentIds().length === 0">
+          <span>⚠️ No documents selected. Select documents on the left panel to query them.</span>
+          <button class="btn btn-primary btn-sm" (click)="toggleSelectAll()" *ngIf="completedDocuments().length > 0">
+            Select All Ready ({{ completedDocuments().length }})
+          </button>
+        </div>
+
+        <div class="input-container">
+          <textarea
+            class="chat-textarea"
+            rows="2"
+            placeholder="Ask a question about your documents... (Press Enter to send, Shift+Enter for newline)"
+            [(ngModel)]="currentQuestion"
+            (keydown)="onTextareaKeydown($event)"
+            [disabled]="chatService.isSending()"
+          ></textarea>
+
+          <button
+            class="btn btn-primary send-btn"
+            (click)="sendQuestion()"
+            [disabled]="!currentQuestion.trim() || chatService.isSending() || chatService.selectedDocumentIds().length === 0"
+          >
+            <svg *ngIf="!chatService.isSending()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <svg *ngIf="chatService.isSending()" class="spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Citation Excerpt Modal -->
+  <div class="modal-backdrop" *ngIf="activeModalCitation() as cit" (click)="closeCitationModal()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="modal-badge">Page {{ cit.pageNumber }}</span>
+          <h3>{{ cit.documentName || 'Document Citation' }}</h3>
+        </div>
+        <button class="modal-close-btn" (click)="closeCitationModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-meta-row">
+          <span class="meta-item">
+            <strong>Relevance Confidence:</strong> {{ (cit.relevanceScore * 100).toFixed(1) }}%
+          </span>
+          <span class="meta-item">
+            <strong>Document ID:</strong> <code>{{ cit.documentId }}</code>
+          </span>
+        </div>
+
+        <div class="modal-excerpt-box">
+          <div class="quote-symbol">“</div>
+          <p>{{ cit.snippet }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCitationModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
